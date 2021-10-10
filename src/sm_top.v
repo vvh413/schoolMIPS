@@ -8,16 +8,20 @@ module sm_top
     input           clkEnable,
     output          clk,
     input   [ 4:0 ] regAddr,
-    output  [31:0 ] regData
+    output  [31:0 ] regData,
+    input   [ 7:0 ] extInput,
+    output  [31:0 ] extOutput
 );
     //metastability input filters
     wire    [ 3:0 ] devide;
     wire            enable;
     wire    [ 4:0 ] addr;
+    wire    [ 7:0 ] extIn;
 
     sm_debouncer #(.SIZE(4)) f0(clkIn, clkDevide, devide);
     sm_debouncer #(.SIZE(1)) f1(clkIn, clkEnable, enable);
     sm_debouncer #(.SIZE(5)) f2(clkIn, regAddr,   addr  );
+    sm_debouncer #(.SIZE(8)) f3(clkIn, extInput,  extIn);
 
     //cores
     //clock devider
@@ -42,7 +46,9 @@ module sm_top
         .regAddr    ( addr      ),
         .regData    ( regData   ),
         .imAddr     ( imAddr    ),
-        .imData     ( imData    )
+        .imData     ( imData    ),
+        .extIn      ( extIn     ),
+        .extOut     ( extOutput ),
     );
 
 endmodule

@@ -48,4 +48,6 @@
                               //         Rd = Rs xor Rt
 `define F_SLL       6'b000000 // R-type, Shift Word Left Logical
                               //         Rd = Rs∅ << shift
+`define F_RDEXT     6'b111110 // R-type, ReaD EXTernal value< extended by 7's bit
+                              //         Rt = (Rs < Immed)
 `define F_ANY       6'b??????

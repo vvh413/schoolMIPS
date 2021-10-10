@@ -17,7 +17,9 @@ module sm_cpu
     input   [ 4:0]  regAddr,    // debug access reg address
     output  [31:0]  regData,    // debug access reg data
     output  [31:0]  imAddr,     // instruction memory address
-    input   [31:0]  imData      // instruction memory data
+    input   [31:0]  imData,     // instruction memory data
+    input   [ 7:0]  extIn       // external nonarch input
+    input   [31:0]  extOut      // external nonarch output
 );
     //control wires
     wire        pcSrc;
@@ -26,6 +28,9 @@ module sm_cpu
     wire        aluSrc;
     wire        aluZero;
     wire [ 2:0] aluControl;
+    
+    wire        extSrc;
+    wire        extDst;
 
     //program counter
     wire [31:0] pc;
@@ -66,8 +71,10 @@ module sm_cpu
     wire [31:0] signImm = { {16 { instr[15] }}, instr[15:0] };
     assign pcBranch = pcNext + signImm;
 
+    //ext input extension
+    wire [31:0] extImm = { {24{ extIn[6] }}, extIn };
     //alu
-    wire [31:0] srcB = aluSrc ? signImm : rd2;
+    wire [31:0] srcB = extSrc ? extImm : (aluSrc ? signImm : rd2);
 
     sm_alu alu
     (
@@ -89,7 +96,9 @@ module sm_cpu
         .regDst     ( regDst       ), 
         .regWrite   ( regWrite     ), 
         .aluSrc     ( aluSrc       ),
-        .aluControl ( aluControl   )
+        .aluControl ( aluControl   ),
+        .extSrc     ( extSrc       ),
+        .extDst     ( extDst       )
     );
 
 endmodule
@@ -103,7 +112,9 @@ module sm_control
     output reg       regDst, 
     output reg       regWrite, 
     output reg       aluSrc,
-    output reg [2:0] aluControl
+    output reg [4:0] aluControl,
+    output reg       extSrc,
+    output reg       extDst
 );
     reg          branch;
     reg          condZero;
@@ -116,25 +127,29 @@ module sm_control
         regWrite    = 1'b0;
         aluSrc      = 1'b0;
         aluControl  = `ALU_ADD;
+        extSrc      = 1'b0;
+        extDst      = 1'b0;
 
         casez( {cmdOper,cmdFunk} )
             default               : ;
 
-            { `C_SPEC,  `F_ADDU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_ADD;  end
-            { `C_SPEC,  `F_OR   } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_OR;   end
-            { `C_SPEC,  `F_SRL  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SRL;  end
-            { `C_SPEC,  `F_SLTU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLTU; end
-            { `C_SPEC,  `F_SUBU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SUBU; end
-            { `C_SPEC,  `F_XOR  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_XOR;  end
-            { `C_SPEC,  `F_SLL  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLL;  end
+            { `C_SPEC,  `F_ADDU  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_ADD;  end
+            { `C_SPEC,  `F_OR    } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_OR;   end
+            { `C_SPEC,  `F_SRL   } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SRL;  end
+            { `C_SPEC,  `F_SLTU  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLTU; end
+            { `C_SPEC,  `F_SUBU  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SUBU; end
+            { `C_SPEC,  `F_XOR   } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_XOR;  end
+            { `C_SPEC,  `F_SLL   } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLL;  end
 
-            { `C_ADDIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD;  end
-            { `C_LUI,   `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_LUI;  end
-            { `C_SLTIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_SLTU; end
-            { `C_XORI,  `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_XOR;  end
+            { `C_ADDIU, `F_ANY   } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD;  end
+            { `C_LUI,   `F_ANY   } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_LUI;  end
+            { `C_SLTIU, `F_ANY   } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_SLTU; end
+            { `C_XORI,  `F_ANY   } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_XOR;  end
 
-            { `C_BEQ,   `F_ANY  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
-            { `C_BNE,   `F_ANY  } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
+            { `C_BEQ,   `F_ANY   } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
+            { `C_BNE,   `F_ANY   } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
+
+            { `C_SPEC,  `F_RDEXT } : begin extSrc = 1'b1; end
         endcase
     end
 endmodule
