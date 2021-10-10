@@ -265,7 +265,9 @@ module golden_top(
         .clkEnable  ( clkEnable ),
         .clk        ( clk       ),
         .regAddr    ( regAddr   ),
-        .regData    ( regData   )
+        .regData    ( regData   ),
+        .extInput   ( GPIO[7:0] ),
+        .extOutput  ()
     );
 
     //outputs
