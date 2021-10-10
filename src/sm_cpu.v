@@ -125,9 +125,13 @@ module sm_control
             { `C_SPEC,  `F_SRL  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SRL;  end
             { `C_SPEC,  `F_SLTU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLTU; end
             { `C_SPEC,  `F_SUBU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SUBU; end
+            { `C_SPEC,  `F_XOR  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_XOR;  end
+            { `C_SPEC,  `F_SLL  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLL;  end
 
             { `C_ADDIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD;  end
             { `C_LUI,   `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_LUI;  end
+            { `C_SLTIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_SLTU; end
+            { `C_XORI,  `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_XOR;  end
 
             { `C_BEQ,   `F_ANY  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
             { `C_BNE,   `F_ANY  } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
@@ -154,6 +158,8 @@ module sm_alu
             `ALU_SRL  : result = srcB >> shift;
             `ALU_SLTU : result = (srcA < srcB) ? 1 : 0;
             `ALU_SUBU : result = srcA - srcB;
+            `ALU_XOR  : result = srcA ^ srcB;
+            `ALU_SLL  : result = srcB << shift;
         endcase
     end
 
