@@ -18,7 +18,7 @@ module sm_cpu
     output  [31:0]  regData,    // debug access reg data
     output  [31:0]  imAddr,     // instruction memory address
     input   [31:0]  imData,     // instruction memory data
-    input   [ 7:0]  extIn       // external nonarch input
+    input   [ 7:0]  extIn,      // external nonarch input
     input   [31:0]  extOut      // external nonarch output
 );
     //control wires
@@ -149,7 +149,7 @@ module sm_control
             { `C_BEQ,   `F_ANY   } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
             { `C_BNE,   `F_ANY   } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
 
-            { `C_SPEC,  `F_RDEXT } : begin extSrc = 1'b1; end
+            { `C_SPEC,  `F_RDEXT } : begin regDst = 1'b1; regWrite = 1'b1; extSrc = 1'b1; end
         endcase
     end
 endmodule

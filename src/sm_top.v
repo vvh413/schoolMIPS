@@ -48,7 +48,7 @@ module sm_top
         .imAddr     ( imAddr    ),
         .imData     ( imData    ),
         .extIn      ( extIn     ),
-        .extOut     ( extOutput ),
+        .extOut     ( extOutput )
     );
 
 endmodule
