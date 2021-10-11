@@ -18,6 +18,7 @@ module sm_testbench;
     wire [31:0] regData;
     wire        cpuClk;
 
+    reg  [ 7:0] extIn;
     // ***** DUT start ************************
 
     sm_top sm_top
@@ -28,7 +29,9 @@ module sm_testbench;
         .clkEnable ( 1'b1    ),
         .clk       ( cpuClk  ),
         .regAddr   ( regAddr ),
-        .regData   ( regData )
+        .regData   ( regData ),
+        .extInput  ( extIn   ),
+        .extOutput (  )
     );
 
     defparam sm_top.sm_clk_divider.bypass = 1;
@@ -109,6 +112,8 @@ module sm_testbench;
 
                 { `C_BEQ,   `F_ANY  } : $write ("beq   $%1d, $%1d, %1d", cmdRs, cmdRt, cmdImmS + 1);
                 { `C_BNE,   `F_ANY  } : $write ("bne   $%1d, $%1d, %1d", cmdRs, cmdRt, cmdImmS + 1);
+
+                { `C_SPEC,  `F_RDEXT } : $write ("rdext $%1d", cmdRd);
             endcase
         end
 
@@ -119,12 +124,13 @@ module sm_testbench;
     integer cycle; initial cycle = 0;
 
     initial regAddr = 0; // get PC
+    initial extIn = 8'hab;
 
     always @ (posedge clk)
     begin
-        $write ("%5d  pc = %2d  pcaddr = %h  instr = %h   v0 = %1d", 
-                  cycle, regData, (regData << 2), sm_top.sm_cpu.instr, sm_top.sm_cpu.rf.rf[2]);
-
+        $write ("%5d  pc = %2d  pcaddr = %h  instr = %h   extIn = %h  v0 = %h ", 
+                  cycle, regData, (regData << 2), sm_top.sm_cpu.instr, extIn, sm_top.sm_cpu.rf.rf[2]);
+        extIn = extIn ^ 8'h40;
         disasmInstr(sm_top.sm_cpu.instr);
 
         $write("\n");
