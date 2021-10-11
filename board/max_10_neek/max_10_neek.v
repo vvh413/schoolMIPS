@@ -256,6 +256,8 @@ module golden_top(
     wire [  4:0 ] regAddr   =  SW [4:0];
     wire [ 31:0 ] regData;
 
+    wire extIn = { {4{1'b0}}, GPIO[3:0] };
+    wire extOut;
     //cores
     sm_top sm_top
     (
@@ -266,9 +268,11 @@ module golden_top(
         .clk        ( clk       ),
         .regAddr    ( regAddr   ),
         .regData    ( regData   ),
-        .extInput   ( GPIO[7:0] ),
-        .extOutput  ()
+        .extInput   ( extIn     ),
+        .extOutput  ( extOut    )
     );
+
+    assign GPIO[7:4] = extOut[3:0];
 
     //outputs
     assign LEDR[0]   = clk;

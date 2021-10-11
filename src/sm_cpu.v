@@ -19,7 +19,7 @@ module sm_cpu
     output  [31:0]  imAddr,     // instruction memory address
     input   [31:0]  imData,     // instruction memory data
     input   [ 7:0]  extIn,      // external nonarch input
-    input   [31:0]  extOut      // external nonarch output
+    output  [31:0]  extOut      // external nonarch output
 );
     //control wires
     wire        pcSrc;
@@ -75,6 +75,15 @@ module sm_cpu
     wire [31:0] extImm = { {24{ extIn[6] }}, extIn };
     //alu
     wire [31:0] srcB = extSrc ? extImm : (aluSrc ? signImm : rd2);
+
+    // external output register
+    sm_register_we outreg (
+        .clk   ( clk    ),
+        .rst   ( rst_n  ),
+        .we    ( extDst ),
+        .d     ( wd3    ),
+        .q     ( extOut )
+    );
 
     sm_alu alu
     (
@@ -150,6 +159,7 @@ module sm_control
             { `C_BNE,   `F_ANY   } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
 
             { `C_SPEC,  `F_RDEXT } : begin regDst = 1'b1; regWrite = 1'b1; extSrc = 1'b1; end
+            { `C_SPEC,  `F_WREXT } : begin extDst = 1'b1; end
         endcase
     end
 endmodule
