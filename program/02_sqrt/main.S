@@ -17,7 +17,10 @@
 
         .text
 
-init:   li      $a0, 82         ## x = 82
+init:   # rdext   $a0                 # read external value to a0
+        # 000000 00000 00000 00100 00000 111110
+        # 0000203e
+        addu    $0, $0, $0          # replace 00000021 in hex
         li      $v0, 0          ## calculation result reset
 
 sqrt:   lui     $t0, 0x4000     ## m = 0x40000000
@@ -34,5 +37,9 @@ L0:     or      $t2, $t1, $t0   ## b = y | m;
 L1:     srl     $t0, $t0, 2     ## m >>= 2
         bnez    $t0, L0         ## if(m != 0) goto L0
         move    $v0, $t1        ## return y
+        # wrext   $v0                 # write v0 to external out
+        # 000000 00010 00000 00000 00000 111111
+        # 0040003f
+        addu    $0, $0, $0          # replace 00000021 in hex
 
 end:    beqz    $0,  end        ## while(1);

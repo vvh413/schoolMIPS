@@ -73,7 +73,7 @@ module sm_cpu
 
     //ext input extension
     wire [31:0] extImm = { {24{ extIn[6] }}, extIn };
-    //alu
+    //alu second arg
     wire [31:0] srcB = extSrc ? extImm : (aluSrc ? signImm : rd2);
 
     // external output register
@@ -85,6 +85,7 @@ module sm_cpu
         .q     ( extOut )
     );
 
+    //alu
     sm_alu alu
     (
         .srcA       ( rd1          ),

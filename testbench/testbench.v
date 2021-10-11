@@ -126,13 +126,12 @@ module sm_testbench;
     integer cycle; initial cycle = 0;
 
     initial regAddr = 0; // get PC
-    initial extIn = 8'hab;
+    initial extIn = 144; // 8'b10010000
 
     always @ (posedge clk)
     begin
-        $write ("%5d  pc = %2d  pcaddr = %h  instr = %h  extIn = %h extOut = %h v0 = %h ", 
+        $write ("%5d  pc = %2d  pcaddr = %h  instr = %h  extIn = %d extOut = %d v0 = %d ", 
                   cycle, regData, (regData << 2), sm_top.sm_cpu.instr, extIn, extOut, sm_top.sm_cpu.rf.rf[2]);
-        extIn = extIn ^ 8'h40;
         disasmInstr(sm_top.sm_cpu.instr);
 
         $write("\n");
