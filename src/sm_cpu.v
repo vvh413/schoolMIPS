@@ -17,7 +17,9 @@ module sm_cpu
     input   [ 4:0]  regAddr,    // debug access reg address
     output  [31:0]  regData,    // debug access reg data
     output  [31:0]  imAddr,     // instruction memory address
-    input   [31:0]  imData      // instruction memory data
+    input   [31:0]  imData,     // instruction memory data
+    input   [ 3:0]  memAddr,    // mem address
+    output  [31:0]  memData     // mem data
 );
     //control wires
     wire        pcSrc;
@@ -26,6 +28,8 @@ module sm_cpu
     wire        aluSrc;
     wire        aluZero;
     wire [ 2:0] aluControl;
+    wire        memWrite;
+    wire        memToReg;
 
     //program counter
     wire [31:0] pc;
@@ -76,7 +80,7 @@ module sm_cpu
         .oper       ( aluControl   ),
         .shift      ( instr[10:6 ] ),
         .zero       ( aluZero      ),
-        .result     ( wd3          ) 
+        .result     ( aluResult    ) 
     );
 
     //control
@@ -89,8 +93,26 @@ module sm_cpu
         .regDst     ( regDst       ), 
         .regWrite   ( regWrite     ), 
         .aluSrc     ( aluSrc       ),
-        .aluControl ( aluControl   )
+        .aluControl ( aluControl   ),
+        .memWrite   ( memWrite     ),
+        .memToReg   ( memToReg     )
     );
+
+    wire [31:0] aluResult;
+    wire [31:0] readData;
+    
+    // ram
+    sm_ram sm_ram #(DATA_WIDTH=32, ADDR_WIDTH=4) (
+        .clk        ( clk       ),
+        .data_a     ( rd2       ),
+        .addr_a     ( aluResult ),
+        .we_a       ( memWrite  ),
+        .q_a        ( readData  ),
+        .addr_b     ( memAddr   ),
+        .q_b        ( memData   )
+    );
+    
+    wd3 = memToReg ? readData : aluResult;
 
 endmodule
 
@@ -103,7 +125,9 @@ module sm_control
     output reg       regDst, 
     output reg       regWrite, 
     output reg       aluSrc,
-    output reg [2:0] aluControl
+    output reg [2:0] aluControl,
+    output reg       memWrite,
+    output reg       memToReg
 );
     reg          branch;
     reg          condZero;
@@ -116,6 +140,8 @@ module sm_control
         regWrite    = 1'b0;
         aluSrc      = 1'b0;
         aluControl  = `ALU_ADD;
+        memWrite    = 1'b0;
+        memToReg    = 1'b0;
 
         casez( {cmdOper,cmdFunk} )
             default               : ;
@@ -132,6 +158,9 @@ module sm_control
             { `C_LUI,   `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_LUI;  end
             { `C_SLTIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_SLTU; end
             { `C_XORI,  `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_XOR;  end
+
+            { `C_LW,    `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; memToReg = 1'b1; aluControl = `ALU_ADD;  end
+            { `C_SW,    `F_ANY  } : begin aluSrc = 1'b1; memWrite = 1'b1; aluControl = `ALU_ADD;  end
 
             { `C_BEQ,   `F_ANY  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
             { `C_BNE,   `F_ANY  } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
@@ -187,4 +216,53 @@ module sm_register_file
 
     always @ (posedge clk)
         if(we3) rf [a3] <= wd3;
+endmodule
+
+// Quartus Prime Verilog Template
+// True Dual Port RAM with single clock
+
+module sm_ram
+#(parameter DATA_WIDTH=8, parameter ADDR_WIDTH=6)
+(
+	input [(DATA_WIDTH-1):0] data_a, data_b,
+	input [(ADDR_WIDTH-1):0] addr_a, addr_b,
+	input we_a, we_b, clk,
+	output reg [(DATA_WIDTH-1):0] q_a, q_b
+);
+
+	// Declare the RAM variable
+	reg [DATA_WIDTH-1:0] ram[2**ADDR_WIDTH-1:0];
+
+    initial begin
+        $readmemh ("ram.hex", ram);
+    end
+
+	// Port A 
+	always @ (posedge clk)
+	begin
+		if (we_a) 
+		begin
+			ram[addr_a] <= data_a;
+			q_a <= data_a;
+		end
+		else 
+		begin
+			q_a <= ram[addr_a];
+		end 
+	end 
+
+	// Port B 
+	always @ (posedge clk)
+	begin
+		if (we_b) 
+		begin
+			ram[addr_b] <= data_b;
+			q_b <= data_b;
+		end
+		else 
+		begin
+			q_b <= ram[addr_b];
+		end 
+	end
+
 endmodule
