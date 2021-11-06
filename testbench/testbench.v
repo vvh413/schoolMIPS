@@ -4,7 +4,7 @@
 `include "sm_cpu.vh"
 
 `ifndef SIMULATION_CYCLES
-    `define SIMULATION_CYCLES 256
+    `define SIMULATION_CYCLES 1024
 `endif
 
 module sm_testbench;
@@ -125,13 +125,12 @@ module sm_testbench;
 
     always @ (posedge clk)
     begin
-        $write ("%5d  pc = %2d  pcaddr = %h  instr = %h   v0 = %1d", 
+        $write ("%5d  pc = %2d  pcaddr = %h  instr = %h   v0 = %1d ", 
                   cycle, regData, (regData << 2), sm_top.sm_cpu.instr, sm_top.sm_cpu.rf.rf[2]);
 
         disasmInstr(sm_top.sm_cpu.instr);
 
         $write("\n");
-
         cycle = cycle + 1;
 
         if (cycle > `SIMULATION_CYCLES)

@@ -157,8 +157,8 @@ module sm_control
             { `C_SLTIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_SLTU; end
             { `C_XORI,  `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_XOR;  end
 
-            { `C_LW,    `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; memToReg = 1'b1; aluControl = `ALU_ADD;  end
-            { `C_SW,    `F_ANY  } : begin aluSrc = 1'b1; memWrite = 1'b1; aluControl = `ALU_ADD;  end
+            { `C_LW,    `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD; memToReg = 1'b1; end
+            { `C_SW,    `F_ANY  } : begin memWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD;  end
 
             { `C_BEQ,   `F_ANY  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
             { `C_BNE,   `F_ANY  } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
@@ -225,7 +225,7 @@ module sm_ram
 	input [(DATA_WIDTH-1):0] data_a, data_b,
 	input [(ADDR_WIDTH-1):0] addr_a, addr_b,
 	input we_a, we_b, clk,
-	output reg [(DATA_WIDTH-1):0] q_a, q_b
+	output [(DATA_WIDTH-1):0] q_a, q_b
 );
 
 	// Declare the RAM variable
@@ -237,30 +237,14 @@ module sm_ram
 
 	// Port A 
 	always @ (posedge clk)
-	begin
-		if (we_a) 
-		begin
-			ram[addr_a] <= data_a;
-			q_a <= data_a;
-		end
-		else 
-		begin
-			q_a <= ram[addr_a];
-		end 
-	end 
+		if (we_a) ram[addr_a] <= data_a;
+
+    assign q_a = ram[addr_a];
 
 	// Port B 
 	always @ (posedge clk)
-	begin
-		if (we_b) 
-		begin
-			ram[addr_b] <= data_b;
-			q_b <= data_b;
-		end
-		else 
-		begin
-			q_b <= ram[addr_b];
-		end 
-	end
+		if (we_b) ram[addr_b] <= data_b;
+	
+    assign q_b = ram[addr_b];
 
 endmodule
