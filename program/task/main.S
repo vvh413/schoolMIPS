@@ -19,7 +19,7 @@ start:
             beq $0, $0, while       # while(1)
         break:
 
-		sw 		$t3, 1($t1)			# A[j+1] = A[i]
+        sw      $t3, 1($t1)         # A[j+1] = A[i]
         addiu   $t0, $t0, 1         # i++
         subu    $t2, $t2, $s0       # counter--
         sltu    $t6, $0, $t2        # (0 < t2) == (t2 > 0) == !(t2 <= 0)
