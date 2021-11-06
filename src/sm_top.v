@@ -21,7 +21,7 @@ module sm_top
     sm_debouncer #(.SIZE(4)) f0(clkIn, clkDevide, devide );
     sm_debouncer #(.SIZE(1)) f1(clkIn, clkEnable, enable );
     sm_debouncer #(.SIZE(5)) f2(clkIn, regAddr,   addr   );
-    sm_debouncer #(.SIZE(4)) f2(clkIn, memAddr,   addrMem);
+    sm_debouncer #(.SIZE(4)) f3(clkIn, memAddr,   addrMem);
 
     //cores
     //clock devider
