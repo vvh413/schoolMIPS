@@ -34,7 +34,7 @@
                               //         Rt = (Rs xor Immed)
 `define C_LW        6'b100011 // I-type, Load Word
                               //         Rt = mem[Rs + offset]
-`define C_SW        6'b101011 // I-type, Store Word Left Logical
+`define C_SW        6'b101011 // I-type, Store Word
                               //         mem[Rs + offset] = Rt
 
 //instruction function field
