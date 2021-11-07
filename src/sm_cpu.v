@@ -50,7 +50,11 @@ module sm_cpu
     wire [ 4:0] a3  = regDst ? instr[15:11] : instr[20:16];
     wire [31:0] rd1;
     wire [31:0] rd2;
-    wire [31:0] wd3 = memToReg ? readData : aluResult;;
+
+    wire [31:0] aluResult;
+    wire [31:0] readData;
+
+    wire [31:0] wd3 = memToReg ? readData : aluResult;
 
     sm_register_file rf
     (
@@ -98,9 +102,6 @@ module sm_cpu
         .memToReg   ( memToReg     )
     );
 
-    wire [31:0] aluResult;
-    wire [31:0] readData;
-    
     // ram
     sm_ram #(.DATA_WIDTH(32), .ADDR_WIDTH(4)) sm_ram (
         .clk        ( clk       ),
